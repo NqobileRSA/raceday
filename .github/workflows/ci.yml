@@ -1,0 +1,78 @@
+name: RaceDay CI - Build and Test
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  validate-structure:
+    name: Validate repository structure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Part 1 planning documents
+        run: |
+          set -e
+          test -d docs || { echo "FAIL: /docs folder is missing"; exit 1; }
+          ls docs/*.png docs/*.pdf 2>/dev/null | grep -qi erd || { echo "FAIL: ERD (PNG or PDF) not found in /docs"; exit 1; }
+          ls docs/*.md docs/*.pdf 2>/dev/null | grep -qi endpoint || { echo "FAIL: API endpoint plan not found in /docs"; exit 1; }
+          SQL=$(ls docs/*.sql 2>/dev/null | head -n 1)
+          test -n "$SQL" || { echo "FAIL: SQL script not found in /docs"; exit 1; }
+          TABLES=$(grep -ci "CREATE TABLE" "$SQL")
+          INSERTS=$(grep -ci "INSERT INTO" "$SQL")
+          echo "SQL script: $SQL ($TABLES CREATE TABLE, $INSERTS INSERT INTO)"
+          [ "$TABLES" -ge 6 ] || { echo "FAIL: expected at least 6 CREATE TABLE statements"; exit 1; }
+          [ "$INSERTS" -ge 5 ] || { echo "FAIL: expected at least 5 INSERT INTO statements"; exit 1; }
+          echo "PASS: Part 1 documents present"
+
+      - name: Check Part 2 project structure
+        run: |
+          set -e
+          for f in README.md RaceDay.sln \
+                   src/RaceDay.Api/RaceDay.Api.csproj \
+                   src/RaceDay.Api/Program.cs \
+                   src/RaceDay.Api/Data/RaceDayDbContext.cs \
+                   tests/RaceDay.Api.Tests/RaceDay.Api.Tests.csproj; do
+            test -f "$f" || { echo "FAIL: $f is missing"; exit 1; }
+            echo "PASS: $f"
+          done
+
+  build-and-test:
+    name: Build and run unit tests
+    runs-on: ubuntu-latest
+    needs: validate-structure
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore RaceDay.sln
+
+      - name: Build
+        run: dotnet build RaceDay.sln --configuration Release --no-restore
+
+      - name: Run unit tests
+        run: >
+          dotnet test RaceDay.sln
+          --configuration Release
+          --no-build
+          --verbosity normal
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
