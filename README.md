@@ -4,21 +4,21 @@
 
 The project is built in three parts for the PROG6212 Portfolio of Evidence:
 
-| Part | Scope | Status |
-|------|-------|--------|
-| Part 1 | ERD, API endpoint plan, SQL script, CI structure validation | Complete (`/docs`) |
+| Part       | Scope                                                                                              | Status              |
+| ---------- | -------------------------------------------------------------------------------------------------- | ------------------- |
+| Part 1     | ERD, API endpoint plan, SQL script, CI structure validation                                        | Complete (`/docs`)  |
 | **Part 2** | **ASP.NET Core Web API, EF Core Code-First, session auth, Swagger, unit tests, CI build and test** | **This submission** |
-| Part 3 | ASP.NET Core MVC front end, Azure Blob Storage, Docker | Planned |
+| Part 3     | ASP.NET Core MVC front end, Azure Blob Storage, Docker                                             | Planned             |
 
 ---
 
 ## Part 2 Submission
 
-| Item | Link |
-|------|------|
-| Video presentation (unlisted YouTube) | **[Watch the Part 2 walkthrough](https://youtu.be/REPLACE_WITH_YOUR_VIDEO_ID)** |
-| CI/CD workflow | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) |
-| Endpoint plan (specification) | [`docs/API_ENDPOINT_PLAN.md`](./docs/API_ENDPOINT_PLAN.md) |
+| Item                                  | Link                                                             |
+| ------------------------------------- | ---------------------------------------------------------------- |
+| Video presentation (unlisted YouTube) | **[Watch the Part 2 walkthrough](https://youtu.be/iOWRQRSEOMw)** |
+| CI/CD workflow                        | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml)         |
+| Endpoint plan (specification)         | [`docs/API_ENDPOINT_PLAN.md`](./docs/API_ENDPOINT_PLAN.md)       |
 
 ### CI/CD green build
 
@@ -32,10 +32,10 @@ The project is built in three parts for the PROG6212 Portfolio of Evidence:
 
 Role-based access is enforced at the API level on every protected endpoint.
 
-| Role | Can do |
-|------|--------|
-| **Organiser** | Create, edit and delete their own events; add, edit and delete categories; post route information and announcements; view all enrolments for their events and confirm them with a bib number; capture finish times and positions after the event. |
-| **Participant** | Create an account; browse and filter events; enter an event by selecting a category; view and cancel their own enrolments; view their personal results (e.g. 47th out of 312 finishers); view and update their profile. |
+| Role            | Can do                                                                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Organiser**   | Create, edit and delete their own events; add, edit and delete categories; post route information and announcements; view all enrolments for their events and confirm them with a bib number; capture finish times and positions after the event. |
+| **Participant** | Create an account; browse and filter events; enter an event by selecting a category; view and cancel their own enrolments; view their personal results (e.g. 47th out of 312 finishers); view and update their profile.                           |
 
 An Organiser cannot use Participant endpoints and a Participant cannot use Organiser endpoints (the API returns `403 Forbidden`). An Organiser can also only change events they created.
 
@@ -43,16 +43,16 @@ An Organiser cannot use Participant endpoints and a Participant cannot use Organ
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| API | ASP.NET Core 8 Web API (C#) |
-| Data access | Entity Framework Core 8, Code-First with migrations |
-| Database | SQL Server |
-| Authentication | Server-side sessions (ASP.NET Core Session), PBKDF2 password hashing (ASP.NET Core Identity `PasswordHasher`) |
-| API documentation | Swagger / Swashbuckle with XML comments |
-| Testing | xUnit with the EF Core InMemory provider |
-| CI/CD | GitHub Actions (structure validation, build, test) |
-| External API | Open-Meteo (live weather, no API key required) |
+| Layer             | Technology                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| API               | ASP.NET Core 8 Web API (C#)                                                                                   |
+| Data access       | Entity Framework Core 8, Code-First with migrations                                                           |
+| Database          | SQL Server                                                                                                    |
+| Authentication    | Server-side sessions (ASP.NET Core Session), PBKDF2 password hashing (ASP.NET Core Identity `PasswordHasher`) |
+| API documentation | Swagger / Swashbuckle with XML comments                                                                       |
+| Testing           | xUnit with the EF Core InMemory provider                                                                      |
+| CI/CD             | GitHub Actions (structure validation, build, test)                                                            |
+| External API      | Open-Meteo (live weather, no API key required)                                                                |
 
 ---
 
@@ -132,14 +132,14 @@ Every endpoint is listed in Swagger UI with its purpose, request body, parameter
 1. Expand **Auth > POST /api/auth/login** and click **Try it out**.
 2. Log in with a seeded account (all seeded accounts use the password `Password123!`):
 
-   | Role | Email |
-   |------|-------|
-   | Organiser | `thabo.mokoena@raceday.co.za` |
-   | Organiser | `lerato.dlamini@raceday.co.za` |
-   | Participant | `sipho.ndlovu@gmail.com` |
-   | Participant | `naledi.khumalo@gmail.com` |
-   | Participant | `james.venter@outlook.com` |
-   | Participant | `amahle.zulu@yahoo.com` |
+   | Role        | Email                          |
+   | ----------- | ------------------------------ |
+   | Organiser   | `thabo.mokoena@raceday.co.za`  |
+   | Organiser   | `lerato.dlamini@raceday.co.za` |
+   | Participant | `sipho.ndlovu@gmail.com`       |
+   | Participant | `naledi.khumalo@gmail.com`     |
+   | Participant | `james.venter@outlook.com`     |
+   | Participant | `amahle.zulu@yahoo.com`        |
 
 3. The response sets the `.RaceDay.Session` cookie. The browser sends it automatically with every later request from Swagger, so protected endpoints now work for that user's role.
 4. Call **POST /api/auth/logout** to end the session, or log in as a different user to switch roles.
@@ -168,24 +168,24 @@ Example login body:
 
 All 31 endpoints from the endpoint plan are implemented. Full details: [`docs/API_ENDPOINT_PLAN.md`](./docs/API_ENDPOINT_PLAN.md).
 
-| Resource | Method and route | Role |
-|----------|------------------|------|
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout` | None |
-| Profile | `GET /api/users/me`, `PUT /api/users/me` | Any |
-| Events | `GET /api/events`, `GET /api/events/{id}` | None |
-| | `POST /api/events`, `PUT /api/events/{id}`, `DELETE /api/events/{id}`, `GET /api/events/my` | Organiser |
-| Categories | `GET /api/events/{eventId}/categories` | None |
-| | `POST`, `PUT /{categoryId}`, `DELETE /{categoryId}` on `/api/events/{eventId}/categories` | Organiser |
-| Enrolments | `POST /api/events/{eventId}/categories/{categoryId}/enrol`, `GET /api/enrolments/my`, `DELETE /api/enrolments/{enrolmentId}` | Participant |
-| | `GET /api/events/{eventId}/enrolments`, `PUT /api/enrolments/{enrolmentId}/confirm` | Organiser |
-| Results | `GET /api/events/{eventId}/results` | None |
-| | `POST /api/enrolments/{enrolmentId}/results`, `PUT /api/results/{resultId}` | Organiser |
-| | `GET /api/results/my` | Participant |
-| Routes | `GET /api/events/{eventId}/route` | None |
-| | `POST`, `PUT /api/events/{eventId}/route` | Organiser |
-| Announcements | `GET /api/events/{eventId}/announcements` | None |
-| | `POST /api/events/{eventId}/announcements`, `DELETE /api/events/{eventId}/announcements/{announcementId}` | Organiser |
-| Weather | `GET /api/events/{eventId}/weather` | Any |
+| Resource      | Method and route                                                                                                             | Role        |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| Auth          | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`                                                   | None        |
+| Profile       | `GET /api/users/me`, `PUT /api/users/me`                                                                                     | Any         |
+| Events        | `GET /api/events`, `GET /api/events/{id}`                                                                                    | None        |
+|               | `POST /api/events`, `PUT /api/events/{id}`, `DELETE /api/events/{id}`, `GET /api/events/my`                                  | Organiser   |
+| Categories    | `GET /api/events/{eventId}/categories`                                                                                       | None        |
+|               | `POST`, `PUT /{categoryId}`, `DELETE /{categoryId}` on `/api/events/{eventId}/categories`                                    | Organiser   |
+| Enrolments    | `POST /api/events/{eventId}/categories/{categoryId}/enrol`, `GET /api/enrolments/my`, `DELETE /api/enrolments/{enrolmentId}` | Participant |
+|               | `GET /api/events/{eventId}/enrolments`, `PUT /api/enrolments/{enrolmentId}/confirm`                                          | Organiser   |
+| Results       | `GET /api/events/{eventId}/results`                                                                                          | None        |
+|               | `POST /api/enrolments/{enrolmentId}/results`, `PUT /api/results/{resultId}`                                                  | Organiser   |
+|               | `GET /api/results/my`                                                                                                        | Participant |
+| Routes        | `GET /api/events/{eventId}/route`                                                                                            | None        |
+|               | `POST`, `PUT /api/events/{eventId}/route`                                                                                    | Organiser   |
+| Announcements | `GET /api/events/{eventId}/announcements`                                                                                    | None        |
+|               | `POST /api/events/{eventId}/announcements`, `DELETE /api/events/{eventId}/announcements/{announcementId}`                    | Organiser   |
+| Weather       | `GET /api/events/{eventId}/weather`                                                                                          | Any         |
 
 ### Business rules enforced by the API
 
@@ -202,15 +202,15 @@ All 31 endpoints from the endpoint plan are implemented. Full details: [`docs/AP
 
 `tests/RaceDay.Api.Tests` contains 90 xUnit test cases. Each test class gets its own isolated in-memory database with a known data set, and controllers are called directly with an in-memory session.
 
-| Area | Test class | Covers (success and failure) |
-|------|------------|------------------------------|
-| Registration and login | `AuthControllerTests` | Register both roles (201 + session holds ID and role), password is hashed, duplicate email (409), invalid role (400), weak passwords (400), invalid gender (400), login success (200 + session), wrong password (401), unknown email (401), logout clears session |
-| Role enforcement | `RoleAccessTests` | No session (401), Participant on Organiser endpoint (403), Organiser on Participant endpoint (403), correct role allowed, and a check that all 19 role-based endpoints carry the correct `[SessionAuthorize]` role |
-| Event management | `EventsControllerTests` | Organiser creates event (201, linked to organiser), invalid type and past date (400), update own (200), update or delete another organiser's event (403), missing event (404), delete own, public list shows only Published, filters, draft hidden, "my events" |
-| Categories | `CategoriesControllerTests` | Add age category (201), another organiser's event (403), invalid ages (400), enrolment counts, missing event (404) |
-| Event enrolments | `EnrolmentsControllerTests` | Participant enrols and the database row links participant, event and category; duplicate entry (409); full category, under-age and past event (400); category from another event (404); my enrolments; cancel own and someone else's (403); organiser views event enrolments, other organiser (403); confirm with bib; age calculation |
-| Results | `ResultsControllerTests` | Record result (201), duplicate (409), missing time (400), another organiser (403), participant's own results with total finishers, update, public leaderboard |
-| Profile, weather, hashing | `UsersControllerTests`, `WeatherControllerTests`, `PasswordServiceTests` | Profile read and update, invalid gender, weather 200/404/503 with a fake provider, salted hashing, seed hash verifies |
+| Area                      | Test class                                                               | Covers (success and failure)                                                                                                                                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Registration and login    | `AuthControllerTests`                                                    | Register both roles (201 + session holds ID and role), password is hashed, duplicate email (409), invalid role (400), weak passwords (400), invalid gender (400), login success (200 + session), wrong password (401), unknown email (401), logout clears session                                                                      |
+| Role enforcement          | `RoleAccessTests`                                                        | No session (401), Participant on Organiser endpoint (403), Organiser on Participant endpoint (403), correct role allowed, and a check that all 19 role-based endpoints carry the correct `[SessionAuthorize]` role                                                                                                                     |
+| Event management          | `EventsControllerTests`                                                  | Organiser creates event (201, linked to organiser), invalid type and past date (400), update own (200), update or delete another organiser's event (403), missing event (404), delete own, public list shows only Published, filters, draft hidden, "my events"                                                                        |
+| Categories                | `CategoriesControllerTests`                                              | Add age category (201), another organiser's event (403), invalid ages (400), enrolment counts, missing event (404)                                                                                                                                                                                                                     |
+| Event enrolments          | `EnrolmentsControllerTests`                                              | Participant enrols and the database row links participant, event and category; duplicate entry (409); full category, under-age and past event (400); category from another event (404); my enrolments; cancel own and someone else's (403); organiser views event enrolments, other organiser (403); confirm with bib; age calculation |
+| Results                   | `ResultsControllerTests`                                                 | Record result (201), duplicate (409), missing time (400), another organiser (403), participant's own results with total finishers, update, public leaderboard                                                                                                                                                                          |
+| Profile, weather, hashing | `UsersControllerTests`, `WeatherControllerTests`, `PasswordServiceTests` | Profile read and update, invalid gender, weather 200/404/503 with a fake provider, salted hashing, seed hash verifies                                                                                                                                                                                                                  |
 
 Run them with `dotnet test`. They also run on every push in GitHub Actions.
 
@@ -255,21 +255,22 @@ raceday/
 
 ## Design Decisions and Changes from Part 1
 
-| Topic | Decision |
-|-------|----------|
-| JWT replaced by sessions | The Part 1 plan mentioned JWT. The Part 2 brief requires session management with the user ID and role held on the server, so login and register now start a session and return the user object. `POST /api/auth/logout` was added to end it. The plan in `/docs` has been updated and lists these changes. |
-| Event distance | The brief asks each event to capture a distance. Most road events offer several distances, so distance stays on `Categories.distance_km` (as designed in the Part 1 ERD), and every event response includes `distances_km` built from its categories. No schema change was needed. |
-| Seed password hashes | The Part 1 seed data used a placeholder bcrypt string. It was replaced (in both the EF seed data and `RaceDay_Schema.sql`) with a real PBKDF2 hash of `Password123!` in the format the API verifies, so the seeded accounts can log in. |
-| Schema match | Entities use `[Table]` and `[Column]` attributes so table and column names (`user_id`, `event_date`, ...) and SQL types (`varchar(255)`, `decimal(5,2)`, `date`, `time`, `text`) match the Part 1 script exactly. Foreign-key names (`FK_Events_Organiser`, ...), cascade rules and CHECK constraints are set in `OnModelCreating`. |
-| C# entity `EventRoute` | The `Routes` table is mapped to a class named `EventRoute` so it does not clash with ASP.NET Core's `[Route]` attribute. The table name is unchanged. |
-| Cancelling enrolments | `DELETE /api/enrolments/{id}` sets the status to Cancelled instead of deleting the row, so organisers keep an accurate history and capacity counts stay correct. |
-| snake_case JSON | Request and response bodies use snake_case, matching the field names in the endpoint plan and the database columns. |
+| Topic                    | Decision                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| JWT replaced by sessions | The Part 1 plan mentioned JWT. The Part 2 brief requires session management with the user ID and role held on the server, so login and register now start a session and return the user object. `POST /api/auth/logout` was added to end it. The plan in `/docs` has been updated and lists these changes.                          |
+| Event distance           | The brief asks each event to capture a distance. Most road events offer several distances, so distance stays on `Categories.distance_km` (as designed in the Part 1 ERD), and every event response includes `distances_km` built from its categories. No schema change was needed.                                                  |
+| Seed password hashes     | The Part 1 seed data used a placeholder bcrypt string. It was replaced (in both the EF seed data and `RaceDay_Schema.sql`) with a real PBKDF2 hash of `Password123!` in the format the API verifies, so the seeded accounts can log in.                                                                                             |
+| Schema match             | Entities use `[Table]` and `[Column]` attributes so table and column names (`user_id`, `event_date`, ...) and SQL types (`varchar(255)`, `decimal(5,2)`, `date`, `time`, `text`) match the Part 1 script exactly. Foreign-key names (`FK_Events_Organiser`, ...), cascade rules and CHECK constraints are set in `OnModelCreating`. |
+| C# entity `EventRoute`   | The `Routes` table is mapped to a class named `EventRoute` so it does not clash with ASP.NET Core's `[Route]` attribute. The table name is unchanged.                                                                                                                                                                               |
+| Cancelling enrolments    | `DELETE /api/enrolments/{id}` sets the status to Cancelled instead of deleting the row, so organisers keep an accurate history and capacity counts stay correct.                                                                                                                                                                    |
+| snake_case JSON          | Request and response bodies use snake_case, matching the field names in the endpoint plan and the database columns.                                                                                                                                                                                                                 |
 
 ---
 
 ## AI Usage Disclosure
 
 <!-- Required by the brief: describe briefly and honestly which AI tools you used and for what. Edit this to match what you actually did. -->
+
 AI assistance (Claude) was used to help scaffold parts of the API, the unit tests and this README. All code was reviewed, run and tested by me, and I can explain every design decision shown in the video.
 
 ---
