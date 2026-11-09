@@ -1,0 +1,15 @@
+@{
+    var message = TempData["Flash"] as string;
+    var kind = TempData["FlashKind"] as string ?? "success";
+    var icon = kind switch { "danger" => "bi-exclamation-octagon", "warning" => "bi-exclamation-triangle", _ => "bi-check-circle" };
+}
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="container mt-4">
+        <div class="alert alert-@kind flash d-flex gap-2 align-items-start alert-dismissible fade show" role="status">
+            <i class="bi @icon mt-1"></i>
+            <div>@message</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+}

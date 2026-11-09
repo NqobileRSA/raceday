@@ -1,0 +1,104 @@
+@{
+    var user = Context.Session.CurrentUser();
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["action"]?.ToString();
+    string Active(string c, string? a = null) => controller == c && (a is null || action == a) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string t ? $"{t} | RaceDay" : "RaceDay | Road runs, walks and rides in South Africa")</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,600;0,700;1,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" href="~/img/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+    <a class="visually-hidden-focusable position-absolute p-2 bg-white" href="#main">Skip to content</a>
+    <header class="rd-nav">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="rd-brand" asp-controller="@(user?.IsOrganiser == true ? "Organiser" : "Home")" asp-action="@(user?.IsOrganiser == true ? "Dashboard" : "Index")">
+                    <svg class="rd-brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#FFB81C"/><path d="M9 25 15 7h3l-6 18zM17 25l6-18h3l-6 18z" fill="#22272E"/></svg>
+                    RaceDay
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav" aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="nav">
+                    <ul class="navbar-nav me-auto ms-lg-4 gap-lg-1">
+                        @if (user?.IsOrganiser == true)
+                        {
+                            <li class="nav-item"><a class="nav-link @Active("Organiser", "Dashboard")" asp-controller="Organiser" asp-action="Dashboard">Dashboard</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Organiser", "Events")" asp-controller="Organiser" asp-action="Events">My events</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Organiser", "Create")" asp-controller="Organiser" asp-action="Create">Create event</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">Browse events</a></li>
+                        }
+                        else if (user?.IsParticipant == true)
+                        {
+                            <li class="nav-item"><a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">Find events</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Participant", "MyEvents")" asp-controller="Participant" asp-action="MyEvents">My events</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Participant", "MyResults")" asp-controller="Participant" asp-action="MyResults">My results</a></li>
+                            <li class="nav-item"><a class="nav-link @Active("Participant", "Profile")" asp-controller="Participant" asp-action="Profile">Profile</a></li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link @Active("Home")" asp-controller="Home" asp-action="Index">Find events</a></li>
+                        }
+                    </ul>
+                    @if (user is null)
+                    {
+                        <div class="d-flex gap-2 mt-3 mt-lg-0">
+                            <a class="btn btn-outline-light-subtle" asp-controller="Account" asp-action="Login">Log in</a>
+                            <a class="btn btn-gold" asp-controller="Account" asp-action="Register">Create account</a>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="d-flex align-items-center gap-3 mt-3 mt-lg-0">
+                            <div class="d-flex align-items-center gap-2">
+                                @if (!string.IsNullOrEmpty(user.Avatar))
+                                {
+                                    <img class="rd-avatar" src="@user.Avatar" alt="">
+                                }
+                                else
+                                {
+                                    <span class="rd-avatar" aria-hidden="true">@user.Initials</span>
+                                }
+                                <div class="lh-sm">
+                                    <div class="text-white fw-semibold">@user.FullName</div>
+                                    <div class="rd-role">@user.Role</div>
+                                </div>
+                            </div>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                <button type="submit" class="btn btn-sm btn-outline-light-subtle"><i class="bi bi-box-arrow-right me-1"></i>Log out</button>
+                            </form>
+                        </div>
+                    }
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main">
+        <partial name="_Flash" />
+        @RenderBody()
+    </main>
+
+    <footer class="rd-footer">
+        <div class="container d-flex flex-wrap justify-content-between gap-2">
+            <span>RaceDay: road runs, walks and rides across South Africa.</span>
+            <span>PROG6212 Portfolio of Evidence, Nqobile Ngobeni</span>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

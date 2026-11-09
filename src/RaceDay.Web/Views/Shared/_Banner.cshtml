@@ -1,0 +1,11 @@
+@model EventDto
+@if (!string.IsNullOrEmpty(Model.ImageUrl))
+{
+    <img src="@Model.ImageUrl" alt="" loading="lazy">
+}
+else
+{
+    <div class="banner-fallback banner-@Model.EventType" aria-hidden="true">
+        <i class="bi @(Model.EventType switch { "Cycling" => "bi-bicycle", "Walking" => "bi-person-walking", _ => "bi-stopwatch" })"></i>
+    </div>
+}

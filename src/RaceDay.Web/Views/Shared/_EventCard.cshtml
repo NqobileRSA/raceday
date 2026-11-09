@@ -1,0 +1,25 @@
+@model EventDto
+<a class="rd-card event-card" asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">
+    <div class="event-banner">
+        <partial name="_Banner" model="Model" />
+        <div class="date-tile" aria-label="@Model.EventDate.ToString("d MMMM yyyy")">
+            <span class="day">@Model.EventDate.Day</span>
+            <span class="month">@Model.EventDate.ToString("MMM yyyy")</span>
+        </div>
+    </div>
+    <div class="event-card-body">
+        <div class="d-flex gap-2 flex-wrap mb-1">
+            <span class="chip">@Model.EventType</span>
+            <span class="chip chip-gold tabular">@Model.DistanceLabel</span>
+        </div>
+        <h3>@Model.Title</h3>
+        <div class="event-meta">
+            <span><i class="bi bi-geo-alt"></i>@Model.Location</span>
+            @if (!string.IsNullOrEmpty(Model.Province)) { <span><i class="bi bi-map"></i>@Model.Province</span> }
+        </div>
+        <div class="event-meta mt-auto pt-2">
+            <span><i class="bi bi-people"></i>@Model.EnrolmentCount entered</span>
+            <span><i class="bi bi-flag"></i>@Model.CategoryCount @(Model.CategoryCount == 1 ? "category" : "categories")</span>
+        </div>
+    </div>
+</a>

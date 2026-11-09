@@ -1,0 +1,3 @@
+@model string
+@* Colour-coded status pill: green Confirmed/Finished/Published, amber Pending, red Cancelled/DNF/DQ, grey Draft/DNS, blue Completed. *@
+<span class="status status-@Model.ToLowerInvariant()">@Model</span>
