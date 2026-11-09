@@ -35,8 +35,8 @@ See [Changes since Part 1](#changes-since-part-1) at the end of this document fo
 |-------------|-------|-------------|---------------|--------------|-------------------|
 | GET | `/api/events` | List all published events. Supports filtering by province, event_type and date range. | None | None (query params: `province?`, `event_type?`, `from_date?`, `to_date?`, `page?`, `limit?`) | `200 OK` - array of event objects with distances, category and enrolment counts (`X-Total-Count` header); `400 Bad Request` - invalid filter |
 | GET | `/api/events/{id}` | Get full details of a single event including its categories, route and announcements. | None | None | `200 OK` - event object with nested categories, route, announcements; `404 Not Found` |
-| POST | `/api/events` | Create a new event linked to the logged-in organiser. | Organiser | `{ title, description?, event_date, location, province?, event_type, status?, contact_email?, image_url? }` | `201 Created` - new event object; `400 Bad Request` - validation errors; `401 Unauthorized`; `403 Forbidden` - not an organiser |
-| PUT | `/api/events/{id}` | Update an existing event. Only the organiser who owns the event may update it. | Organiser | `{ title?, description?, event_date?, location?, province?, event_type?, status?, contact_email?, image_url? }` | `200 OK` - updated event; `400 Bad Request`; `401 Unauthorized`; `403 Forbidden` - not the owning organiser; `404 Not Found` |
+| POST | `/api/events` | Create a new event linked to the logged-in organiser. | Organiser | `{ title, description?, distance_km?, event_date, location, province?, event_type, status?, contact_email?, image_url? }` | `201 Created` - new event object; `400 Bad Request` - validation errors; `401 Unauthorized`; `403 Forbidden` - not an organiser |
+| PUT | `/api/events/{id}` | Update an existing event. Only the organiser who owns the event may update it. | Organiser | `{ title?, description?, distance_km?, event_date?, location?, province?, event_type?, status?, contact_email?, image_url? }` | `200 OK` - updated event; `400 Bad Request`; `401 Unauthorized`; `403 Forbidden` - not the owning organiser; `404 Not Found` |
 | DELETE | `/api/events/{id}` | Delete an event and all its related categories, enrolments, results, route and announcements. Only the owning organiser. | Organiser | None | `200 OK` - confirmation message; `401 Unauthorized`; `403 Forbidden`; `404 Not Found` |
 | GET | `/api/events/my` | List all events created by the logged-in organiser, including drafts. | Organiser | None (query params: `status?`, `page?`, `limit?`) | `200 OK` - array of event objects; `401 Unauthorized`; `403 Forbidden` |
 
@@ -104,6 +104,17 @@ See [Changes since Part 1](#changes-since-part-1) at the end of this document fo
 
 ---
 
+## Image Uploads (Azure Blob Storage, Part 3)
+
+Both endpoints take `multipart/form-data` with a single `file` field (JPG, PNG or WebP, up to 5 MB, checked by file signature). The API stores the image in a private Azure Blob Storage container and saves a read-only SAS URL on the record. The MVC app never talks to Azure directly.
+
+| HTTP Method | Route | Description | Role Required | Request Body | Expected Response |
+|-------------|-------|-------------|---------------|--------------|-------------------|
+| POST | `/api/events/{id}/banner` | Upload or replace the event's banner image (container `event-banners`). The old blob is deleted. Only the owning organiser. | Organiser | `file` (form field) | `200 OK` - updated event with `image_url`; `400 Bad Request` - missing, too large or not an image; `401 Unauthorized`; `403 Forbidden`; `404 Not Found`; `503 Service Unavailable` - storage unreachable |
+| POST | `/api/users/me/profile-picture` | Upload or replace the logged-in user's profile picture (container `profile-pictures`). The old blob is deleted. | Any | `file` (form field) | `200 OK` - updated user with `profile_picture_url`; `400 Bad Request`; `401 Unauthorized`; `503 Service Unavailable` |
+
+---
+
 ## Summary
 
 | Resource | Endpoints | Methods |
@@ -117,7 +128,8 @@ See [Changes since Part 1](#changes-since-part-1) at the end of this document fo
 | Routes | 3 | GET, POST, PUT |
 | Announcements | 3 | GET, POST, DELETE |
 | Weather | 1 | GET |
-| **Total** | **31** | |
+| Image uploads | 2 | POST |
+| **Total** | **33** | |
 
 ---
 
@@ -128,5 +140,9 @@ See [Changes since Part 1](#changes-since-part-1) at the end of this document fo
 | Authentication uses **server-side sessions** instead of JWT. Register and login now return the user object and set a session cookie rather than returning a token. | The Part 2 brief requires session management that stores the user's ID and role on the server for all subsequent requests. |
 | Added **`POST /api/auth/logout`** (endpoint 31). | With sessions the server must be able to end a session; Part 3 also requires users to end their session. |
 | `GET /api/events/{eventId}/weather` lists `401 Unauthorized` explicitly. | The endpoint was always role `Any`; the failure code was missing from the Part 1 row. |
+
+| **Part 3:** added `POST /api/events/{id}/banner` and `POST /api/users/me/profile-picture` (endpoints 32 and 33). | Part 3 requires event banners and profile pictures stored in Azure Blob Storage through the API. |
+| **Part 3:** events gained an optional `distance_km`; users gained `profile_picture_url`. | The Part 3 event form must capture a distance; profile pictures need somewhere to store their URL. Added with the EF Core migration `AddProfilePictureAndEventDistance`. |
+| **Part 3:** `POST /api/enrolments/{enrolmentId}/results` returns `400 Bad Request` before the event date. | Results may only be captured after the event has taken place. |
 
 No routes, HTTP methods, roles or request bodies from the Part 1 plan were removed or renamed.

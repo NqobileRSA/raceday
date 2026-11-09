@@ -27,6 +27,7 @@ CREATE TABLE Users (
     phone           VARCHAR(20)     NULL,
     date_of_birth   DATE            NULL,
     gender          VARCHAR(10)     NULL             CHECK (gender IN ('Male', 'Female', 'Other') OR gender IS NULL),
+    profile_picture_url VARCHAR(1000) NULL,         -- Part 3: Azure Blob Storage URL
     province        VARCHAR(50)     NULL,
     created_at      DATETIME        NOT NULL         DEFAULT GETDATE(),
     updated_at      DATETIME        NOT NULL         DEFAULT GETDATE()
@@ -40,6 +41,7 @@ CREATE TABLE Events (
     organiser_id    INT             NOT NULL,
     title           VARCHAR(255)    NOT NULL,
     description     TEXT            NULL,
+    distance_km     DECIMAL(5,2)    NULL,            -- Part 3: headline distance shown on the event
     event_date      DATE            NOT NULL,
     location        VARCHAR(255)    NOT NULL,
     province        VARCHAR(50)     NULL,
@@ -47,7 +49,7 @@ CREATE TABLE Events (
     status          VARCHAR(20)     NOT NULL         DEFAULT 'Draft'
                                                      CHECK (status IN ('Draft', 'Published', 'Completed', 'Cancelled')),
     contact_email   VARCHAR(255)    NULL,
-    image_url       VARCHAR(500)    NULL,
+    image_url       VARCHAR(500)    NULL,            -- Part 3: banner URL in Azure Blob Storage
     created_at      DATETIME        NOT NULL         DEFAULT GETDATE(),
     updated_at      DATETIME        NOT NULL         DEFAULT GETDATE(),
 
