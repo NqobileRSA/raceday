@@ -8,3 +8,6 @@ TestResults/
 .DS_Store
 appsettings.Development.local.json
 .env
+
+# Rider
+.idea/
