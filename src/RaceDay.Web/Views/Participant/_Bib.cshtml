@@ -1,0 +1,23 @@
+@model EnrolmentDto
+@{
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var canCancel = Model.Status != "Cancelled" && Model.EventDate >= today;
+}
+<article class="bib" aria-label="Entry for @Model.EventTitle">
+    <div class="bib-sponsor">@Model.EventTitle</div>
+    <div class="bib-number @(string.IsNullOrEmpty(Model.BibNumber) ? "tba" : "")">@(string.IsNullOrEmpty(Model.BibNumber) ? "TBA" : Model.BibNumber)</div>
+    <div class="bib-category">@Model.CategoryName</div>
+    <div class="text-center text-muted small">@Model.EventDate?.ToString("ddd d MMM yyyy"), @Model.EventLocation</div>
+    <div class="bib-foot">
+        <partial name="_Status" model="Model.Status" />
+        <div class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId">Event</a>
+            @if (canCancel)
+            {
+                <form asp-action="Cancel" asp-route-id="@Model.EnrolmentId" method="post" class="m-0" data-confirm="Cancel your entry for @Model.EventTitle?">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancel</button>
+                </form>
+            }
+        </div>
+    </div>
+</article>

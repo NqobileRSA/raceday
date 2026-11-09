@@ -1,0 +1,40 @@
+@model List<EnrolmentDto>
+@{
+    ViewData["Title"] = "My events";
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var upcoming = Model.Where(e => e.EventDate >= today && e.Status != "Cancelled").OrderBy(e => e.EventDate).ToList();
+    var other = Model.Except(upcoming).OrderByDescending(e => e.EventDate).ToList();
+}
+<div class="container">
+    <div class="page-head">
+        <h1>My events</h1>
+        <p>Every event you've entered. Your bib number appears once the organiser confirms your entry.</p>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="rd-card empty">
+            <i class="bi bi-ticket-perforated"></i>
+            <h3>You haven't entered any events yet</h3>
+            <p class="text-muted">Find an event, choose a category and your entry shows up here.</p>
+            <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Find events</a>
+        </div>
+    }
+    else
+    {
+        @if (upcoming.Count > 0)
+        {
+            <h2 class="h3 mb-3">Coming up</h2>
+            <div class="row g-4 mb-5">
+                @foreach (var e in upcoming) { <div class="col-sm-6 col-lg-4"><partial name="_Bib" model="e" /></div> }
+            </div>
+        }
+        @if (other.Count > 0)
+        {
+            <h2 class="h3 mb-3">Past and cancelled</h2>
+            <div class="row g-4">
+                @foreach (var e in other) { <div class="col-sm-6 col-lg-4"><partial name="_Bib" model="e" /></div> }
+            </div>
+        }
+    }
+</div>
