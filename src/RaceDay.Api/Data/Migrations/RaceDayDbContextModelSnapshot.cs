@@ -309,6 +309,10 @@ namespace RaceDay.Api.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<decimal?>("DistanceKm")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("distance_km");
+
                     b.Property<DateOnly>("EventDate")
                         .HasColumnType("date")
                         .HasColumnName("event_date");
@@ -738,6 +742,11 @@ namespace RaceDay.Api.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("phone");
+
+                    b.Property<string>("ProfilePictureUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("profile_picture_url");
 
                     b.Property<string>("Province")
                         .HasMaxLength(50)
