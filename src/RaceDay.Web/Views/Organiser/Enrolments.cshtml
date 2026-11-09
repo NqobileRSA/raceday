@@ -1,0 +1,77 @@
+@model EnrolmentsViewModel
+@{
+    ViewData["Title"] = "Enrolments";
+    var pending = Model.Enrolments.Count(e => e.Status == "Pending");
+}
+<div class="container">
+    <div class="page-head">
+        <a class="small text-decoration-none" asp-action="Events"><i class="bi bi-arrow-left"></i> My events</a>
+        <h1 class="mt-2">Enrolments for @Model.Event.Title</h1>
+        <p>@Model.Enrolments.Count @(Model.Enrolments.Count == 1 ? "entry" : "entries") shown@(pending > 0 ? $", {pending} waiting for confirmation" : ""). Confirm entries and assign bib numbers.</p>
+    </div>
+
+    <form method="get" asp-action="Enrolments" asp-route-id="@Model.Event.EventId" class="rd-card p-3 mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-sm-5">
+                <label class="form-label" for="categoryId">Category</label>
+                <select class="form-select" id="categoryId" name="categoryId">
+                    <option value="">All categories</option>
+                    @foreach (var c in Model.Categories) { <option value="@c.CategoryId" selected="@(Model.CategoryId == c.CategoryId)">@c.Name</option> }
+                </select>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Any status</option>
+                    @foreach (var s in new[] { "Pending", "Confirmed", "Cancelled" }) { <option value="@s" selected="@(Model.Status == s)">@s</option> }
+                </select>
+            </div>
+            <div class="col-sm-3"><button class="btn btn-dark w-100" type="submit">Filter</button></div>
+        </div>
+    </form>
+
+    @if (Model.Enrolments.Count == 0)
+    {
+        <div class="rd-card empty">
+            <i class="bi bi-people"></i>
+            <h3>No entries yet</h3>
+            <p class="text-muted mb-0">Entries appear here as soon as participants enter.</p>
+        </div>
+    }
+    else
+    {
+        <div class="rd-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Entered</th><th>Emergency contact</th><th>Status</th><th>Bib</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Enrolments)
+                        {
+                            <tr>
+                                <td><span class="fw-semibold">@e.ParticipantName</span><div class="small text-muted">@e.ParticipantEmail</div></td>
+                                <td>@e.CategoryName<div class="small text-muted tabular">@e.DistanceKm?.ToString("0.#")km</div></td>
+                                <td class="text-nowrap">@e.EnrolmentDate.ToString("d MMM yyyy")</td>
+                                <td>@(e.EmergencyContactName ?? "-")<div class="small text-muted">@e.EmergencyContactPhone</div></td>
+                                <td><partial name="_Status" model="e.Status" /></td>
+                                <td style="min-width:210px">
+                                    @if (e.Status == "Cancelled")
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="Confirm" asp-route-id="@Model.Event.EventId" method="post" class="d-flex gap-1 m-0">
+                                            <input type="hidden" name="enrolmentId" value="@e.EnrolmentId">
+                                            <input class="form-control form-control-sm tabular" name="bibNumber" value="@e.BibNumber" placeholder="Bib no." maxlength="20" aria-label="Bib number for @e.ParticipantName">
+                                            <button type="submit" class="btn btn-sm @(e.Status == "Pending" ? "btn-primary" : "btn-outline-secondary")">@(e.Status == "Pending" ? "Confirm" : "Update")</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,108 @@
+@model CategoriesViewModel
+@{
+    ViewData["Title"] = "Categories";
+    var editing = Model.NewCategory.CategoryId is not null;
+}
+<div class="container">
+    <div class="page-head">
+        <a class="small text-decoration-none" asp-action="Events"><i class="bi bi-arrow-left"></i> My events</a>
+        <h1 class="mt-2">Categories for @Model.Event.Title</h1>
+        <p>Add distance or age categories. Participants choose one when they enter.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="rd-card overflow-hidden">
+                @if (Model.Categories.Count == 0)
+                {
+                    <div class="empty">
+                        <i class="bi bi-list-ol"></i>
+                        <h3>No categories yet</h3>
+                        <p class="text-muted mb-0">Add at least one category to open entries, e.g. "21.1km Half Marathon" or "Under 20 - 10km".</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table rd-table">
+                            <thead><tr><th>Category</th><th>Distance</th><th>Ages</th><th>Fee</th><th>Entries</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var c in Model.Categories)
+                                {
+                                    var json = System.Text.Json.JsonSerializer.Serialize(new { c.CategoryId, c.Name, c.DistanceKm, c.EntryFee, c.MaxParticipants, c.MinAge, c.MaxAge, GenderRestriction = c.GenderRestriction ?? "" });
+                                    <tr>
+                                        <td class="fw-semibold">@c.Name @if (c.GenderRestriction is not null) { <span class="chip chip-dark ms-1">@c.GenderRestriction</span> }</td>
+                                        <td class="tabular">@c.DistanceKm.ToString("0.#")km</td>
+                                        <td>@c.AgeLabel</td>
+                                        <td class="tabular">@(c.EntryFee == 0 ? "Free" : c.EntryFee.ToString("R 0"))</td>
+                                        <td class="tabular">@c.EnrolmentCount@(c.MaxParticipants is { } max ? $" / {max}" : "")</td>
+                                        <td class="text-end text-nowrap">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-edit-category="@json">Edit</button>
+                                            <form asp-action="DeleteCategory" asp-route-id="@Model.Event.EventId" asp-route-categoryId="@c.CategoryId" method="post" class="d-inline" data-confirm="Delete @c.Name? Entries in this category will be removed.">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Delete @c.Name"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <a class="btn btn-outline-secondary" asp-controller="Events" asp-action="Details" asp-route-id="@Model.Event.EventId">View event page</a>
+                <a class="btn btn-outline-secondary" asp-action="Enrolments" asp-route-id="@Model.Event.EventId">Enrolments</a>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <form id="category-form" class="rd-card p-4" asp-action="SaveCategory" asp-route-id="@Model.Event.EventId" method="post" novalidate>
+                <h2 class="h3" id="category-form-title">@(editing ? $"Edit {Model.NewCategory.Name}" : "Add a category")</h2>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger validation-summary-errors" role="alert"></div>
+                <input type="hidden" asp-for="NewCategory.CategoryId" />
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="NewCategory.Name" class="form-label"></label>
+                        <input asp-for="NewCategory.Name" class="form-control" placeholder="e.g. Under 20 - 10km">
+                        <span asp-validation-for="NewCategory.Name" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-6">
+                        <label asp-for="NewCategory.DistanceKm" class="form-label"></label>
+                        <input asp-for="NewCategory.DistanceKm" class="form-control" type="number" step="0.1" min="0.1">
+                        <span asp-validation-for="NewCategory.DistanceKm" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-6">
+                        <label asp-for="NewCategory.EntryFee" class="form-label"></label>
+                        <input asp-for="NewCategory.EntryFee" class="form-control" type="number" step="1" min="0" placeholder="0 for free">
+                        <span asp-validation-for="NewCategory.EntryFee" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-4">
+                        <label asp-for="NewCategory.MinAge" class="form-label"></label>
+                        <input asp-for="NewCategory.MinAge" class="form-control" type="number" min="0" max="120">
+                        <span asp-validation-for="NewCategory.MinAge" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-4">
+                        <label asp-for="NewCategory.MaxAge" class="form-label"></label>
+                        <input asp-for="NewCategory.MaxAge" class="form-control" type="number" min="0" max="120">
+                        <span asp-validation-for="NewCategory.MaxAge" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-4">
+                        <label asp-for="NewCategory.MaxParticipants" class="form-label"></label>
+                        <input asp-for="NewCategory.MaxParticipants" class="form-control" type="number" min="1">
+                        <span asp-validation-for="NewCategory.MaxParticipants" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="NewCategory.GenderRestriction" class="form-label"></label>
+                        <select asp-for="NewCategory.GenderRestriction" class="form-select">
+                            <option value="">Open to all</option>
+                            <option value="Male">Male only</option>
+                            <option value="Female">Female only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary flex-fill" id="category-submit">@(editing ? "Save changes" : "Add category")</button>
+                    <button type="button" class="btn btn-outline-secondary @(editing ? "" : "d-none")" id="category-cancel">Cancel edit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
