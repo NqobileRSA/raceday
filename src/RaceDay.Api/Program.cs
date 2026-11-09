@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure.Storage.Blobs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RaceDay.Api.Data;
@@ -46,6 +47,14 @@ builder.Services.AddHttpClient<IWeatherService, OpenMeteoWeatherService>(client 
     client.Timeout = TimeSpan.FromSeconds(10);
 });
 
+// ---------------- Azure Blob Storage (Part 3) ----------------
+// Real Azure: set AzureStorage:ConnectionString to the storage account's connection string.
+// Local / Docker: the Azurite emulator connection string is used (see docker-compose.yml).
+builder.Services.AddSingleton(_ => new BlobServiceClient(
+    builder.Configuration["AzureStorage:ConnectionString"] ?? "UseDevelopmentStorage=true"));
+builder.Services.AddSingleton<IImageStorage, AzureBlobImageStorage>();
+builder.Services.AddHealthChecks();
+
 // ---------------- Swagger ----------------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -71,26 +80,40 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // ---------------- Apply migrations on startup ----------------
+// Retries so the API waits for SQL Server when both start together in docker-compose.
 if (app.Configuration.GetValue("Database:MigrateOnStartup", true))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<RaceDayDbContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    try
+    var attempts = app.Configuration.GetValue("Database:StartupRetries", 10);
+    for (var attempt = 1; attempt <= attempts; attempt++)
     {
-        if (db.Database.GetMigrations().Any())
+        try
         {
-            db.Database.Migrate();
-            logger.LogInformation("Database is up to date.");
+            if (db.Database.GetMigrations().Any())
+            {
+                db.Database.Migrate();
+                logger.LogInformation("Database is up to date.");
+            }
+            else
+            {
+                logger.LogWarning("No EF Core migrations found. Run: dotnet ef migrations add InitialCreate --project src/RaceDay.Api");
+            }
+
+            if (app.Configuration.GetValue("DemoData:Enabled", false))
+                await DemoDataSeeder.SeedUpcomingEventsAsync(db, logger);
+            break;
         }
-        else
+        catch (Exception ex) when (attempt < attempts)
         {
-            logger.LogWarning("No EF Core migrations found. Run: dotnet ef migrations add InitialCreate --project src/RaceDay.Api");
+            logger.LogWarning("Database not ready (attempt {Attempt}/{Attempts}): {Message}", attempt, attempts, ex.Message);
+            await Task.Delay(TimeSpan.FromSeconds(5));
         }
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Could not apply migrations. Check the DefaultConnection string and that SQL Server is running.");
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Could not apply migrations. Check the DefaultConnection string and that SQL Server is running.");
+        }
     }
 }
 
@@ -107,13 +130,15 @@ app.UseSwaggerUI(c =>
     c.DisplayRequestDuration();
 });
 
-if (!app.Environment.IsDevelopment())
+// Off by default: inside Docker the API is reached over plain HTTP on the private compose network.
+if (app.Configuration.GetValue("Https:Redirect", false))
 {
     app.UseHttpsRedirection();
 }
 
 app.UseSession();
 app.MapControllers();
+app.MapHealthChecks("/health");
 app.MapGet("/", () => Microsoft.AspNetCore.Http.Results.Redirect("/swagger")).ExcludeFromDescription();
 
 app.Run();
