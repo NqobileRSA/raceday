@@ -16,6 +16,7 @@ public static class Mappings
         DateOfBirth = u.DateOfBirth,
         Gender = u.Gender,
         Province = u.Province,
+        ProfilePictureUrl = u.ProfilePictureUrl,
         CreatedAt = u.CreatedAt,
         UpdatedAt = u.UpdatedAt
     };
@@ -40,6 +41,7 @@ public static class Mappings
         r.Title = e.Title;
         r.Description = e.Description;
         r.EventDate = e.EventDate;
+        r.DistanceKm = e.DistanceKm;
         r.Location = e.Location;
         r.Province = e.Province;
         r.EventType = e.EventType;

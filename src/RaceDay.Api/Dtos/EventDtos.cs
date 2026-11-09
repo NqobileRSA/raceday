@@ -16,6 +16,11 @@ public class CreateEventRequest
     [Required]
     public DateOnly? EventDate { get; set; }
 
+    /// <summary>Headline distance in km, e.g. 10 or 42.2.</summary>
+    /// <example>10</example>
+    [Range(0.1, 999.99)]
+    public decimal? DistanceKm { get; set; }
+
     /// <example>uShaka Marine World, Durban</example>
     [Required, MaxLength(255)]
     public string Location { get; set; } = string.Empty;
@@ -51,6 +56,9 @@ public class UpdateEventRequest
 
     public DateOnly? EventDate { get; set; }
 
+    [Range(0.1, 999.99)]
+    public decimal? DistanceKm { get; set; }
+
     [MaxLength(255)]
     public string? Location { get; set; }
 
@@ -79,6 +87,10 @@ public class EventResponse
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public DateOnly EventDate { get; set; }
+
+    /// <summary>Headline distance set by the Organiser, or null.</summary>
+    public decimal? DistanceKm { get; set; }
+
     public string Location { get; set; } = string.Empty;
     public string? Province { get; set; }
     public string EventType { get; set; } = string.Empty;

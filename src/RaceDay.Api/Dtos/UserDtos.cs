@@ -14,6 +14,10 @@ public class UserResponse
     public DateOnly? DateOfBirth { get; set; }
     public string? Gender { get; set; }
     public string? Province { get; set; }
+
+    /// <summary>Azure Blob Storage URL of the profile picture, or null.</summary>
+    public string? ProfilePictureUrl { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

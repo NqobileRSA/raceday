@@ -176,6 +176,7 @@ public class EventsController : RaceDayControllerBase
             Title = request.Title.Trim(),
             Description = request.Description,
             EventDate = request.EventDate.Value,
+            DistanceKm = request.DistanceKm,
             Location = request.Location.Trim(),
             Province = request.Province?.Trim(),
             EventType = eventType,
@@ -246,6 +247,7 @@ public class EventsController : RaceDayControllerBase
         }
 
         if (request.EventDate is not null) ev.EventDate = request.EventDate.Value;
+        if (request.DistanceKm is not null) ev.DistanceKm = request.DistanceKm;
         if (request.Description is not null) ev.Description = request.Description;
         if (request.Province is not null) ev.Province = request.Province.Trim();
         if (request.ContactEmail is not null) ev.ContactEmail = request.ContactEmail.Trim();
