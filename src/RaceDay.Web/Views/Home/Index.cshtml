@@ -1,0 +1,85 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Find events";
+    var user = Context.Session.CurrentUser();
+}
+<section class="rd-hero">
+    <div class="container">
+        <h1>Find your next start line.</h1>
+        <p class="lead">Road runs, walks and rides across South Africa. Pick a category, enter in a minute and track every finish.</p>
+
+        <form method="get" asp-action="Index" class="filter-bar" aria-label="Filter events">
+            <div class="row g-3 align-items-end">
+                <div class="col-sm-6 col-lg-3">
+                    <label class="form-label" for="province">Province</label>
+                    <select class="form-select" id="province" name="province">
+                        <option value="">All provinces</option>
+                        @foreach (var p in Choices.Provinces)
+                        {
+                            <option value="@p" selected="@(Model.Province == p)">@p</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label" for="eventType">Type</label>
+                    <select class="form-select" id="eventType" name="eventType">
+                        <option value="">Any type</option>
+                        @foreach (var t in Choices.EventTypes)
+                        {
+                            <option value="@t" selected="@(Model.EventType == t)">@t</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label" for="fromDate">From</label>
+                    <input class="form-control" type="date" id="fromDate" name="fromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-sm-6 col-lg-2">
+                    <label class="form-label" for="toDate">To</label>
+                    <input class="form-control" type="date" id="toDate" name="toDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-gold flex-fill"><i class="bi bi-search me-1"></i>Show events</button>
+                    @if (Model.HasFilters)
+                    {
+                        <a class="btn btn-outline-light-subtle" asp-action="Index">Clear</a>
+                    }
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="container rd-section">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+        <div>
+            <h2 class="mb-1">Upcoming events</h2>
+            <p class="text-muted mb-0">@Model.Events.Count @(Model.Events.Count == 1 ? "event" : "events")@(Model.HasFilters ? " match your filters" : " open for entries")</p>
+        </div>
+        @if (user is null)
+        {
+            <p class="text-muted mb-0">Have an account? <a asp-controller="Account" asp-action="Login">Log in</a> to enter an event.</p>
+        }
+    </div>
+
+    @if (Model.Events.Count == 0)
+    {
+        <div class="rd-card empty">
+            <i class="bi bi-calendar-x"></i>
+            <h3>No events match those filters</h3>
+            <p class="text-muted">Try another province or widen the dates.</p>
+            <a class="btn btn-primary" asp-action="Index">Show all upcoming events</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var ev in Model.Events)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <partial name="_EventCard" model="ev" />
+                </div>
+            }
+        </div>
+    }
+</section>
