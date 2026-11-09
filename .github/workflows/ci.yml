@@ -1,4 +1,4 @@
-name: RaceDay CI - Build and Test
+name: RaceDay CI - Build, Test and Docker
 
 on:
   push:
@@ -42,6 +42,25 @@ jobs:
             echo "PASS: $f"
           done
 
+      - name: Check Part 3 project structure
+        run: |
+          set -e
+          for f in src/RaceDay.Web/RaceDay.Web.csproj \
+                   src/RaceDay.Web/Program.cs \
+                   src/RaceDay.Web/Infrastructure/ApiClient.cs \
+                   src/RaceDay.Web/Dockerfile \
+                   src/RaceDay.Api/Dockerfile \
+                   docker-compose.yml; do
+            test -f "$f" || { echo "FAIL: $f is missing"; exit 1; }
+            echo "PASS: $f"
+          done
+          grep -q "RaceDay.Web" RaceDay.sln || { echo "FAIL: RaceDay.Web is not in RaceDay.sln"; exit 1; }
+          # The MVC app must only talk to the API: no EF Core, SQL Server or Azure SDK references.
+          if grep -Eq "EntityFrameworkCore|SqlClient|Azure\.Storage" src/RaceDay.Web/RaceDay.Web.csproj; then
+            echo "FAIL: RaceDay.Web must not reference the database or Azure directly"; exit 1
+          fi
+          echo "PASS: RaceDay.Web consumes the API only"
+
   build-and-test:
     name: Build and run unit tests
     runs-on: ubuntu-latest
@@ -76,3 +95,33 @@ jobs:
         with:
           name: test-results
           path: TestResults
+
+  docker-images:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Build API image
+        run: docker build -f src/RaceDay.Api/Dockerfile -t raceday-api:ci .
+
+      - name: Build Web (MVC) image
+        run: docker build -f src/RaceDay.Web/Dockerfile -t raceday-web:ci .
+
+      - name: Smoke test the MVC container
+        run: |
+          docker run -d --name web -p 8080:8080 -e Api__BaseUrl=http://localhost:5999/ raceday-web:ci
+          for i in $(seq 1 20); do
+            curl -fs http://localhost:8080/health && break
+            sleep 2
+          done
+          curl -fs http://localhost:8080/health | grep -q Healthy
+          # Home page must still render (with a friendly message) when the API is unreachable.
+          curl -fs http://localhost:8080/ | grep -q "RaceDay"
+          docker logs web | tail -n 20
+          docker rm -f web
