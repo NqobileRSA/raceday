@@ -1,0 +1,95 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var user = Context.Session.CurrentUser()!;
+    var today = DateOnly.FromDateTime(DateTime.Today);
+    var awaitingResults = Model.Past.Where(e => e.EnrolmentCount > 0 && e.Status != "Cancelled").Take(4).ToList();
+}
+<div class="container">
+    <div class="page-head d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div>
+            <h1>Hi @user.FirstName</h1>
+            <p>Here's how your events are filling up.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg me-1"></i>Create event</a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3"><div class="rd-card stat h-100"><div class="stat-value">@Model.Events.Count</div><div class="stat-label">Events created</div></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="rd-card stat h-100"><div class="stat-value">@Model.Upcoming.Count()</div><div class="stat-label">Upcoming</div></div></div>
+        <div class="col-sm-6 col-lg-3"><div class="rd-card stat h-100"><div class="stat-value">@Model.TotalEnrolments</div><div class="stat-label">Total enrolments</div></div></div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="rd-card stat stat-accent h-100">
+                @if (Model.Next is { } next)
+                {
+                    var days = next.EventDate.DayNumber - today.DayNumber;
+                    <div class="stat-value">@(days == 0 ? "Today" : $"{days} days")</div>
+                    <div class="stat-label">to @next.Title</div>
+                }
+                else
+                {
+                    <div class="stat-value">-</div><div class="stat-label">No upcoming event</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="rd-card overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center px-3 pt-3 pb-2">
+                    <h2 class="h3 m-0">Upcoming events</h2>
+                    <a asp-action="Events" class="small">All events</a>
+                </div>
+                @if (!Model.Upcoming.Any())
+                {
+                    <div class="empty pt-2">
+                        <i class="bi bi-calendar-plus"></i>
+                        <h3>No upcoming events</h3>
+                        <p class="text-muted">Create an event and add categories so participants can enter.</p>
+                        <a class="btn btn-primary" asp-action="Create">Create event</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table rd-table">
+                            <thead><tr><th>Event</th><th>Date</th><th>Entries</th><th>Status</th><th></th></tr></thead>
+                            <tbody>
+                                @foreach (var e in Model.Upcoming)
+                                {
+                                    <tr>
+                                        <td style="min-width:200px"><a class="fw-semibold text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.Title</a><div class="small text-muted">@e.Location</div></td>
+                                        <td class="text-nowrap">@e.EventDate.ToString("d MMM yyyy")<div class="small text-muted">in @(e.EventDate.DayNumber - today.DayNumber) days</div></td>
+                                        <td class="time-cell">@e.EnrolmentCount</td>
+                                        <td><partial name="_Status" model="e.Status" /></td>
+                                        <td class="text-end text-nowrap">
+                                            <a class="btn btn-sm btn-outline-secondary" asp-action="Enrolments" asp-route-id="@e.EventId">View entries</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="rd-card p-3 h-100">
+                <h2 class="h3">Results to capture</h2>
+                <p class="text-muted small">Past events with entrants. Capture finish times and positions so participants see them on My results.</p>
+                @if (awaitingResults.Count == 0)
+                {
+                    <p class="text-muted mb-0">Nothing to capture yet.</p>
+                }
+                @foreach (var e in awaitingResults)
+                {
+                    <a class="d-flex justify-content-between align-items-center py-2 border-top text-decoration-none text-reset" asp-action="Results" asp-route-id="@e.EventId">
+                        <span><span class="fw-semibold d-block">@e.Title</span><small class="text-muted">@e.EventDate.ToString("d MMM yyyy"), @e.EnrolmentCount entrants</small></span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
