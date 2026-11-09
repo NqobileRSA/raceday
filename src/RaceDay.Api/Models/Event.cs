@@ -21,6 +21,10 @@ public class Event
     [Column("description", TypeName = "text")]
     public string? Description { get; set; }
 
+    /// <summary>Headline distance shown on the event card (added in Part 3). Categories can still offer other distances.</summary>
+    [Column("distance_km", TypeName = "decimal(5,2)")]
+    public decimal? DistanceKm { get; set; }
+
     [Column("event_date", TypeName = "date")]
     public DateOnly EventDate { get; set; }
 
@@ -44,6 +48,7 @@ public class Event
     [Column("contact_email", TypeName = "varchar(255)")]
     public string? ContactEmail { get; set; }
 
+    /// <summary>Azure Blob Storage URL of the event banner.</summary>
     [MaxLength(500)]
     [Column("image_url", TypeName = "varchar(500)")]
     public string? ImageUrl { get; set; }

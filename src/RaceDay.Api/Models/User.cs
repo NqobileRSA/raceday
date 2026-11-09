@@ -46,6 +46,11 @@ public class User
     [Column("province", TypeName = "varchar(50)")]
     public string? Province { get; set; }
 
+    /// <summary>Azure Blob Storage URL of the profile picture (added in Part 3).</summary>
+    [MaxLength(1000)]
+    [Column("profile_picture_url", TypeName = "varchar(1000)")]
+    public string? ProfilePictureUrl { get; set; }
+
     [Column("created_at", TypeName = "datetime")]
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
