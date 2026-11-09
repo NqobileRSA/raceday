@@ -1,0 +1,77 @@
+@model ProfileViewModel
+@{ ViewData["Title"] = "Profile"; }
+<div class="container">
+    <div class="page-head">
+        <h1>Profile</h1>
+        <p>Your details are used for age categories and race-day contact.</p>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="rd-card p-4 text-center">
+                <div id="avatar-preview" class="d-flex justify-content-center mb-3">
+                    @if (!string.IsNullOrEmpty(Model.User.ProfilePictureUrl))
+                    {
+                        <img src="@Model.User.ProfilePictureUrl" alt="Your profile picture" class="rd-avatar rd-avatar-lg">
+                    }
+                    else
+                    {
+                        <span class="rd-avatar rd-avatar-lg" aria-hidden="true">@(Model.User.FirstName.FirstOrDefault())@(Model.User.LastName.FirstOrDefault())</span>
+                    }
+                </div>
+                <h2 class="h3 mb-0">@Model.User.FirstName @Model.User.LastName</h2>
+                <p class="text-muted">@Model.User.Email</p>
+                <form asp-action="UploadPicture" method="post" enctype="multipart/form-data" class="text-start">
+                    <label class="form-label" for="picture">Profile picture</label>
+                    <input class="form-control" type="file" id="picture" name="picture" accept="image/jpeg,image/png,image/webp" data-preview="avatar-preview" required>
+                    <div class="form-text">JPG, PNG or WebP, up to 5 MB. Stored in Azure Blob Storage.</div>
+                    <button type="submit" class="btn btn-outline-secondary w-100 mt-3">Upload picture</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <form class="rd-card p-4" asp-action="Profile" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger validation-summary-errors" role="alert"></div>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <label asp-for="FirstName" class="form-label"></label>
+                        <input asp-for="FirstName" class="form-control" autocomplete="given-name">
+                        <span asp-validation-for="FirstName" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="LastName" class="form-label"></label>
+                        <input asp-for="LastName" class="form-control" autocomplete="family-name">
+                        <span asp-validation-for="LastName" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control" autocomplete="tel">
+                        <span asp-validation-for="Phone" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="DateOfBirth" class="form-label"></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" max="@DateTime.Today.ToString("yyyy-MM-dd")">
+                        <span asp-validation-for="DateOfBirth" class="field-validation-error"></span>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="Gender" class="form-label"></label>
+                        <select asp-for="Gender" class="form-select">
+                            <option value="">Prefer not to say</option>
+                            @foreach (var g in Choices.Genders) { <option value="@g">@g</option> }
+                        </select>
+                    </div>
+                    <div class="col-sm-6">
+                        <label asp-for="Province" class="form-label"></label>
+                        <select asp-for="Province" class="form-select">
+                            <option value="">Choose a province</option>
+                            @foreach (var p in Choices.Provinces) { <option value="@p">@p</option> }
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+                    <small class="text-muted">Member since @Model.User.CreatedAt.ToString("MMMM yyyy")</small>
+                    <button type="submit" class="btn btn-primary">Save profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

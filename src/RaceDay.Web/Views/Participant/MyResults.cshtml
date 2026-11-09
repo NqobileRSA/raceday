@@ -1,0 +1,53 @@
+@model MyResultsViewModel
+@{ ViewData["Title"] = "My results"; }
+<div class="container">
+    <div class="page-head">
+        <h1>My results</h1>
+        <p>Your race history. Results appear once the organiser captures them after each event.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-sm-4"><div class="rd-card stat stat-accent"><div class="stat-value">@Model.Finished</div><div class="stat-label">Races finished</div></div></div>
+        <div class="col-sm-4"><div class="rd-card stat"><div class="stat-value">@Model.Podiums</div><div class="stat-label">Podium finishes</div></div></div>
+        <div class="col-sm-4"><div class="rd-card stat"><div class="stat-value">@Model.TotalKm.ToString("0.#")<small class="fs-4">km</small></div><div class="stat-label">Raced in total</div></div></div>
+    </div>
+
+    @if (Model.Results.Count == 0)
+    {
+        <div class="rd-card empty">
+            <i class="bi bi-trophy"></i>
+            <h3>No results yet</h3>
+            <p class="text-muted">After your first event the organiser records your time and position, and it shows up here.</p>
+            <a class="btn btn-primary" asp-controller="Participant" asp-action="MyEvents">See my events</a>
+        </div>
+    }
+    else
+    {
+        <div class="rd-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th>Event</th><th>Date</th><th>Category</th><th>Finish time</th><th>Position</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in Model.Results)
+                        {
+                            <tr>
+                                <td><a class="fw-semibold text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@r.EventId">@r.EventTitle</a></td>
+                                <td class="text-nowrap">@r.EventDate?.ToString("d MMM yyyy")</td>
+                                <td>@r.CategoryName</td>
+                                <td class="time-cell">@(r.FinishTime?.ToString(@"hh\:mm\:ss") ?? "-")</td>
+                                <td class="position-cell">
+                                    @if (r.Position is { } p)
+                                    {
+                                        <strong>@RaceDay.Web.Controllers.OrganiserController.Ordinal(p)</strong><span class="text-muted"> out of @r.TotalFinishers</span>
+                                    }
+                                    else { <span class="text-muted">-</span> }
+                                </td>
+                                <td><partial name="_Status" model="r.Status" /></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
