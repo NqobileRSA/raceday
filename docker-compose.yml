@@ -1,0 +1,75 @@
+# RaceDay - full stack in one command:   docker compose up --build
+#   Website (MVC):        http://localhost:8080
+#   API + Swagger:        http://localhost:5080/swagger
+#   Blob storage:         Azurite (Azure Storage emulator) on http://localhost:10000
+# To use a real Azure Storage account instead of Azurite, put
+#   AZURE_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net
+# in a .env file next to this one (see .env.example) and run the same command.
+
+name: raceday
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64          # runs on Apple Silicon through Rosetta
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "RaceDay#2026"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'RaceDay#2026' -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck
+    ports:
+      - "10000:10000"
+    volumes:
+      - blobdata:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: src/RaceDay.Api/Dockerfile
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=RaceDay;User Id=sa;Password=RaceDay#2026;TrustServerCertificate=True;MultipleActiveResultSets=True"
+      AzureStorage__ConnectionString: "${AZURE_STORAGE_CONNECTION_STRING:-DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;}"
+      # Image links are handed to the browser, so Azurite's internal host name is swapped for localhost.
+      AzureStorage__PublicBlobEndpoint: "${AZURE_PUBLIC_BLOB_ENDPOINT:-http://localhost:10000/devstoreaccount1}"
+      DemoData__Enabled: "true"
+    ports:
+      - "5080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080 && printf \"GET /health HTTP/1.0\\r\\n\\r\\n\" >&3 && grep -q Healthy <&3'"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: src/RaceDay.Web/Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      Api__BaseUrl: "http://api:8080/"
+    ports:
+      - "8080:8080"
+
+volumes:
+  sqldata:
+  blobdata:

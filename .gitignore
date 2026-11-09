@@ -7,3 +7,4 @@ TestResults/
 *.swp
 .DS_Store
 appsettings.Development.local.json
+.env
