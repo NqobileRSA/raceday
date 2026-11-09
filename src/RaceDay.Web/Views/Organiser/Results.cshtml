@@ -1,0 +1,65 @@
+@model ResultsEntryViewModel
+@{ ViewData["Title"] = "Results"; }
+<div class="container">
+    <div class="page-head">
+        <a class="small text-decoration-none" asp-action="Events"><i class="bi bi-arrow-left"></i> My events</a>
+        <h1 class="mt-2">Results for @Model.Event.Title</h1>
+        <p>Capture each finisher's time and position. Participants see them on their My results page as soon as you save.</p>
+    </div>
+
+    @if (!Model.EventHasHappened)
+    {
+        <div class="rd-card empty">
+            <i class="bi bi-hourglass-split"></i>
+            <h3>Results open on race day</h3>
+            <p class="text-muted mb-0">@Model.Event.Title is on @Model.Event.EventDate.ToString("d MMMM yyyy"). Come back after the race to capture finish times.</p>
+        </div>
+    }
+    else if (Model.Rows.Count == 0)
+    {
+        <div class="rd-card empty">
+            <i class="bi bi-people"></i>
+            <h3>No entrants</h3>
+            <p class="text-muted mb-0">Nobody entered this event, so there are no results to capture.</p>
+        </div>
+    }
+    else
+    {
+        <div class="rd-card overflow-hidden">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Bib</th><th>Recorded</th><th style="min-width:430px">Capture result</th></tr></thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            var r = row.Result;
+                            <tr>
+                                <td class="fw-semibold">@row.Enrolment.ParticipantName</td>
+                                <td>@row.Enrolment.CategoryName</td>
+                                <td class="tabular">@(row.Enrolment.BibNumber ?? "-")</td>
+                                <td>
+                                    @if (r is null) { <span class="status status-draft">Not captured</span> }
+                                    else if (r.Status == "Finished") { <span class="time-cell">@r.FinishTime?.ToString(@"hh\:mm\:ss")</span> <span class="text-muted">@RaceDay.Web.Controllers.OrganiserController.Ordinal(r.Position ?? 0)</span> }
+                                    else { <partial name="_Status" model="r.Status" /> }
+                                </td>
+                                <td>
+                                    <form asp-action="SaveResult" method="post" class="result-form d-flex gap-2 m-0 align-items-center">
+                                        <input type="hidden" name="EnrolmentId" value="@row.Enrolment.EnrolmentId">
+                                        <input type="hidden" name="ResultId" value="@r?.ResultId">
+                                        <input type="hidden" name="EventId" value="@Model.Event.EventId">
+                                        <select name="Status" class="form-select form-select-sm" style="width:110px" aria-label="Result status for @row.Enrolment.ParticipantName">
+                                            @foreach (var s in Choices.ResultStatuses) { <option value="@s" selected="@((r?.Status ?? "Finished") == s)">@s</option> }
+                                        </select>
+                                        <input name="FinishTime" class="form-control form-control-sm tabular" style="width:110px" placeholder="hh:mm:ss" pattern="\d{1,2}:[0-5]\d:[0-5]\d" value="@r?.FinishTime?.ToString(@"hh\:mm\:ss")" aria-label="Finish time">
+                                        <input name="Position" type="number" min="1" class="form-control form-control-sm tabular" style="width:90px" placeholder="Pos." value="@r?.Position" aria-label="Position">
+                                        <button type="submit" class="btn btn-sm @(r is null ? "btn-primary" : "btn-outline-secondary")">@(r is null ? "Save" : "Update")</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
