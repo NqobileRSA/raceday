@@ -65,6 +65,19 @@ public class ResultsControllerTests : IDisposable
     }
 
     [Fact]
+    public async Task Create_BeforeTheEventHasTakenPlace_Returns400()
+    {
+        var upcoming = new Enrolment { ParticipantId = _data.Participant.UserId, CategoryId = _data.TenK.CategoryId, Status = EnrolmentStatuses.Confirmed };
+        _data.Db.Enrolments.Add(upcoming);
+        await _data.Db.SaveChangesAsync();
+
+        var result = await As(_data.Organiser).Create(upcoming.EnrolmentId, Finished(1, "00:45:00"));
+
+        Assert.IsType<BadRequestObjectResult>(result);
+        Assert.False(await _data.Db.Results.AnyAsync(r => r.EnrolmentId == upcoming.EnrolmentId));
+    }
+
+    [Fact]
     public async Task GetMine_AsParticipant_ReturnsOwnResultsWithFinisherCount()
     {
         await As(_data.Organiser).Create(_data.PastEnrolment.EnrolmentId, Finished(1, "00:58:12"));

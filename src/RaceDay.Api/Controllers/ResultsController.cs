@@ -25,7 +25,7 @@ public class ResultsController : RaceDayControllerBase
     /// <param name="enrolmentId">The enrolment the result belongs to.</param>
     /// <param name="request">Status plus finish time and position.</param>
     /// <response code="201">The new result.</response>
-    /// <response code="400">Validation failed (invalid status, missing time or position, duplicate position, cancelled enrolment).</response>
+    /// <response code="400">Validation failed (event not yet held, invalid status, missing time or position, duplicate position, cancelled enrolment).</response>
     /// <response code="401">Not logged in.</response>
     /// <response code="403">Not an Organiser, or not the Organiser who owns this event.</response>
     /// <response code="404">The enrolment does not exist.</response>
@@ -51,6 +51,7 @@ public class ResultsController : RaceDayControllerBase
         if (enrolment.Category!.Event!.OrganiserId != organiserId) return Forbidden("You can only record results for events that you created.");
         if (enrolment.Result is not null) return ConflictMessage("A result has already been recorded for this enrolment.");
         if (enrolment.Status == EnrolmentStatuses.Cancelled) return BadRequestMessage("Results cannot be recorded for a cancelled enrolment.");
+        if (enrolment.Category!.Event!.EventDate > Today) return BadRequestMessage("Results can only be captured once the event has taken place.");
 
         var status = Lookup.Normalise(request.Status, ResultStatuses.All);
         if (status is null) return BadRequestMessage("status must be Finished, DNF, DNS or DQ.");
