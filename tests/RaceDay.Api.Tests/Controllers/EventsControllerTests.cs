@@ -23,6 +23,7 @@ public class EventsControllerTests : IDisposable
         Location = "uShaka Marine World, Durban",
         Province = "KwaZulu-Natal",
         EventType = "running",
+        DistanceKm = 10m,
         Status = "Published",
         ContactEmail = "info@durban10k.co.za"
     };
@@ -36,6 +37,7 @@ public class EventsControllerTests : IDisposable
         var body = Assert.IsType<EventResponse>(created.Value);
         Assert.Equal(_data.Organiser.UserId, body.OrganiserId);
         Assert.Equal("Running", body.EventType); // normalised to the CHECK constraint spelling
+        Assert.Equal(10m, body.DistanceKm);
 
         var saved = await _data.Db.Events.SingleAsync(e => e.EventId == body.EventId);
         Assert.Equal("Durban Beachfront 10k", saved.Title);
